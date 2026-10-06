@@ -1,0 +1,16 @@
+# Made by tools/make_icons.py during the build
+app/src/main/res/mipmap-*/ic_launcher.png
+app/src/main/res/mipmap-*/ic_launcher_round.png
+app/src/main/res/mipmap-*/ic_launcher_foreground.png
+app/src/main/res/drawable-*/ic_stat_notify.png
+app/src/main/res/drawable-nodpi/splash_icon.png
+
+# Build output
+build/
+.gradle/
+local.properties
+
+# Signing keys: NEVER commit these
+keys/
+*.jks
+*.keystore

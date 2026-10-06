@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spaila Bridge Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111827;
+      color: #ffffff;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    button {
+      font-size: 18px;
+      padding: 14px 28px;
+      margin: 8px;
+      border: none;
+      border-radius: 12px;
+      background: #22c55e;
+      color: #04130a;
+    }
+    p { color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <h1>Spaila bridge test</h1>
+  <p id="message">Tap a button</p>
+
+  <button id="toastBtn">Test toast</button>
+  <button id="notifBtn">Notify now</button>
+  <button id="schedBtn">Notify in 15 seconds</button>
+  <button id="cancelBtn">Cancel the 15 second one</button>
+
+  <script src="spaila.js"></script>
+  <script>
+    function say(text) {
+      document.getElementById("message").textContent = text;
+    }
+    document.getElementById("toastBtn").addEventListener("click", function () {
+      Spaila.toast("Hello from JavaScript!");
+      say("Toast sent");
+    });
+    document.getElementById("notifBtn").addEventListener("click", function () {
+      Spaila.showNotification("Spaila", "This notification came from JavaScript!");
+      say("Notification sent now");
+    });
+    document.getElementById("schedBtn").addEventListener("click", function () {
+      Spaila.scheduleNotification(1, "Spaila", "15 seconds passed!", 15);
+      say("Scheduled for 15 seconds from " + new Date().toLocaleTimeString());
+    });
+    document.getElementById("cancelBtn").addEventListener("click", function () {
+      Spaila.cancelScheduledNotification(1);
+      say("Cancelled (if it hadn't fired yet)");
+    });
+  </script>
+</body>
+</html>

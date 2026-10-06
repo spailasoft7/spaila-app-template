@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Read this app's settings from app.properties (in the repo root)
+def cfg = new Properties()
+file("../app.properties").withInputStream { cfg.load(it) }
+
+android {
+    namespace 'com.spaila.webview'   // code package: leave as it is
+    compileSdk 36
+
+    defaultConfig {
+        applicationId cfg.appId   // the app's permanent ID on phones and Google Play
+        minSdk 24
+        targetSdk 36
+        // GitHub gives every build a higher number, which Google Play requires
+        versionCode Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
+        versionName cfg.versionName
+        buildConfigField "String", "START_PAGE", "\"${cfg.startPage}\""
+        buildConfigField "int", "BAR_COLOR", "0xFF${cfg.barColor}"
+        resValue "string", "app_name", cfg.appName
+        resValue "color", "icon_background", "#${cfg.barColor}"
+    }
+
+    // The signing key arrives from GitHub Secrets while building. It is never in the repo.
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath) {
+                storeFile file(keystorePath)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv("KEYSTORE_PATH")) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
