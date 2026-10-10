@@ -1,5 +1,16 @@
 package com.spaila.webview;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
+import android.provider.Settings;
+import android.view.WindowManager;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -275,10 +286,123 @@ public class MainActivity extends Activity {
 
             } else if (fn.equals("cancelScheduledNotification")) {
                 cancelScheduledNotification(args.getInt(0));
+            } else if (fn.equals("vibrate")) {
+                vibrate(args.getLong(0));
+
+            } else if (fn.equals("share")) {
+                share(args.getString(0));
+
+            } else if (fn.equals("copyToClipboard")) {
+                copyToClipboard(args.getString(0));
+
+            } else if (fn.equals("keepScreenOn")) {
+                setKeepScreenOn(args.getBoolean(0));
+
+            } else if (fn.equals("flashlight")) {
+                setFlashlight(args.getBoolean(0), true);
+
+            } else if (fn.equals("openBatterySettings")) {
+                openBatterySettings();
+
             }
         } catch (Exception e) {
             // Ignore bad messages for now
         }
+    }
+
+    // ---------- Keep alive ----------
+
+    // Opens the phone's battery settings so the user can let this app run freely.
+    private void openBatterySettings() {
+        try {
+            startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+        } catch (Exception e) {
+            try {
+                Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                i.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(i);
+            } catch (Exception e2) {
+                Toast.makeText(this, "Open Settings, then Apps, then this app, then Battery", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    // ---------- Easy phone features ----------
+
+    private void vibrate(long ms) {
+        ms = Math.max(1, Math.min(ms, 5000));
+        Vibrator v;
+        if (Build.VERSION.SDK_INT >= 31) {
+            v = getSystemService(VibratorManager.class).getDefaultVibrator();
+        } else {
+            v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        }
+        if (v == null || !v.hasVibrator()) return;
+        if (Build.VERSION.SDK_INT >= 26) {
+            v.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
+        } else {
+            v.vibrate(ms);
+        }
+    }
+
+    private void share(String text) {
+        try {
+            Intent send = new Intent(Intent.ACTION_SEND);
+            send.setType("text/plain");
+            send.putExtra(Intent.EXTRA_TEXT, text);
+            startActivity(Intent.createChooser(send, null));
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not open share", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void copyToClipboard(String text) {
+        ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm != null) {
+            cm.setPrimaryClip(ClipData.newPlainText("text", text));
+        }
+    }
+
+    private void setKeepScreenOn(boolean on) {
+        if (on) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+    }
+
+    // The flashlight needs no permission. It uses the back camera's flash.
+    private String torchCameraId(CameraManager cm) throws Exception {
+        for (String id : cm.getCameraIdList()) {
+            CameraCharacteristics c = cm.getCameraCharacteristics(id);
+            Boolean flash = c.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+            Integer facing = c.get(CameraCharacteristics.LENS_FACING);
+            if (flash != null && flash && facing != null
+                    && facing == CameraCharacteristics.LENS_FACING_BACK) {
+                return id;
+            }
+        }
+        return null;
+    }
+
+    private void setFlashlight(boolean on, boolean showErrors) {
+        try {
+            CameraManager cm = getSystemService(CameraManager.class);
+            String id = torchCameraId(cm);
+            if (id == null) {
+                if (showErrors) Toast.makeText(this, "No flashlight on this phone", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            cm.setTorchMode(id, on);
+        } catch (Exception e) {
+            if (showErrors) Toast.makeText(this, "Flashlight not available right now", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        setFlashlight(false, false); // never leave the torch on after the app closes
+        super.onDestroy();
     }
 
     // ---------- Notification permission ----------
@@ -332,7 +456,10 @@ public class MainActivity extends Activity {
     private void scheduleNotification(int id, String title, String message, long triggerAt) {
         AlarmManager alarmManager = getSystemService(AlarmManager.class);
         PendingIntent pending = alarmIntent(id, title, message, PendingIntent.FLAG_UPDATE_CURRENT);
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending);
+        Intent openApp = new Intent(this, MainActivity.class);
+        PendingIntent showIntent = PendingIntent.getActivity(this, 0, openApp,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(triggerAt, showIntent), pending);
     }
 
     private void cancelScheduledNotification(int id) {

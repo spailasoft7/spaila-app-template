@@ -23,6 +23,28 @@
     },
     cancelScheduledNotification: function (id) {
       send("cancelScheduledNotification", [Math.round(Number(id))]);
+    },
+    // Buzz the phone for some milliseconds (1 to 5000).
+    vibrate: function (ms) {
+      send("vibrate", [Math.round(Number(ms) || 200)]);
+    },
+    // Opens the Android share sheet with some text.
+    share: function (text) {
+      send("share", [String(text)]);
+    },
+    copyToClipboard: function (text) {
+      send("copyToClipboard", [String(text)]);
+    },
+    // true = screen stays on, false = back to normal.
+    keepScreenOn: function (on) {
+      send("keepScreenOn", [!!on]);
+    },
+    flashlight: function (on) {
+      send("flashlight", [!!on]);
+    },
+    // Opens the phone's battery settings (so the user can set this app to "No restrictions").
+    openBatterySettings: function () {
+      send("openBatterySettings", []);
     }
   };
 })();

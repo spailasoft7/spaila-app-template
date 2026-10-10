@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Background test</title>
+<script src="spaila.js"></script>
+<style>
+  body { margin:0; padding:24px; background:#0A1F4C; color:#fff; font-family:sans-serif; line-height:1.4; }
+  h1 { font-size:22px; }
+  button { display:block; width:100%; margin:10px 0; padding:14px; font-size:17px; border:0; border-radius:12px; }
+  a { color:#9cc2ff; }
+  .box { background:#16306b; padding:12px; border-radius:12px; margin:14px 0; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">Back</a></p>
+  <h1>Background test</h1>
+  <div class="box">
+    <b>How to test</b><br>
+    1. Tap a button below (allow notifications if asked).<br>
+    2. Test A: leave the app open. Test B: press Home. Test C: swipe the app away from recents and lock the phone.<br>
+    3. Wait. Does the notification arrive on time?
+  </div>
+  <button onclick="Spaila.scheduleNotification(101, 'Background test', 'Alarm fired after 1 minute', 60); Spaila.toast('Alarm set for 1 minute')">Alarm in 1 minute</button>
+  <button onclick="Spaila.scheduleNotification(102, 'Background test', 'Alarm fired after 3 minutes', 180); Spaila.toast('Alarm set for 3 minutes')">Alarm in 3 minutes</button>
+  <button onclick="Spaila.cancelScheduledNotification(101); Spaila.cancelScheduledNotification(102); Spaila.toast('Cancelled')">Cancel alarms</button>
+  <button onclick="Spaila.openBatterySettings()">Open battery settings</button>
+<script>
+  window.onSpailaBack = function () { location.href = 'index.html'; return true; };
+</script>
+</body>
+</html>
