@@ -25,6 +25,8 @@
   <button onclick="Spaila.scheduleNotification(101, 'Background test', 'Alarm fired after 1 minute', 60); Spaila.toast('Alarm set for 1 minute')">Alarm in 1 minute</button>
   <button onclick="Spaila.scheduleNotification(102, 'Background test', 'Alarm fired after 3 minutes', 180); Spaila.toast('Alarm set for 3 minutes')">Alarm in 3 minutes</button>
   <button onclick="Spaila.cancelScheduledNotification(101); Spaila.cancelScheduledNotification(102); Spaila.toast('Cancelled')">Cancel alarms</button>
+  <button onclick="Spaila.startKeepAlive('Keep-alive is on', 'Tap to open the app'); Spaila.toast('Keep-alive started')">Start keep-alive</button>
+  <button onclick="Spaila.stopKeepAlive(); Spaila.toast('Keep-alive stopped')">Stop keep-alive</button>
   <button onclick="Spaila.openBatterySettings()">Open battery settings</button>
 <script>
   window.onSpailaBack = function () { location.href = 'index.html'; return true; };

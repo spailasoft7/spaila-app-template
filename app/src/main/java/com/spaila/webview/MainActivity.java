@@ -304,6 +304,14 @@ public class MainActivity extends Activity {
             } else if (fn.equals("openBatterySettings")) {
                 openBatterySettings();
 
+            } else if (fn.equals("startKeepAlive")) {
+                final String kTitle = args.getString(0);
+                final String kText = args.getString(1);
+                withNotificationPermission(() -> startKeepAlive(kTitle, kText));
+
+            } else if (fn.equals("stopKeepAlive")) {
+                stopKeepAlive();
+
             }
         } catch (Exception e) {
             // Ignore bad messages for now
@@ -311,6 +319,22 @@ public class MainActivity extends Activity {
     }
 
     // ---------- Keep alive ----------
+
+    // Starts a service with a small ongoing notification, to help the app stay alive.
+    private void startKeepAlive(String title, String text) {
+        Intent i = new Intent(this, KeepAliveService.class);
+        i.putExtra("title", title);
+        i.putExtra("text", text);
+        if (Build.VERSION.SDK_INT >= 26) {
+            startForegroundService(i);
+        } else {
+            startService(i);
+        }
+    }
+
+    private void stopKeepAlive() {
+        stopService(new Intent(this, KeepAliveService.class));
+    }
 
     // Opens the phone's battery settings so the user can let this app run freely.
     private void openBatterySettings() {

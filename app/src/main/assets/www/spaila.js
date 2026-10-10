@@ -45,6 +45,13 @@
     // Opens the phone's battery settings (so the user can set this app to "No restrictions").
     openBatterySettings: function () {
       send("openBatterySettings", []);
+    },
+    // Starts a background service with a small ongoing notification.
+    startKeepAlive: function (title, text) {
+      send("startKeepAlive", [String(title || "Running"), String(text || "Tap to open")]);
+    },
+    stopKeepAlive: function () {
+      send("stopKeepAlive", []);
     }
   };
 })();
