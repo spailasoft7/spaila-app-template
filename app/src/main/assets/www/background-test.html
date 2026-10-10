@@ -22,8 +22,8 @@
     2. Test A: leave the app open. Test B: press Home. Test C: swipe the app away from recents and lock the phone.<br>
     3. Wait. Does the notification arrive on time?
   </div>
-  <button onclick="Spaila.scheduleNotification(101, 'Background test', 'Alarm fired after 1 minute', 60); Spaila.toast('Alarm set for 1 minute')">Alarm in 1 minute</button>
-  <button onclick="Spaila.scheduleNotification(102, 'Background test', 'Alarm fired after 3 minutes', 180); Spaila.toast('Alarm set for 3 minutes')">Alarm in 3 minutes</button>
+  <button onclick="Spaila.scheduleNotification(101, 'Background test', 'Alarm fired after 20 seconds', 20); Spaila.toast('Alarm set for 20 seconds')">Alarm in 20 seconds</button>
+  <button onclick="Spaila.scheduleNotification(102, 'Background test', 'Alarm fired after 5 seconds', 5); Spaila.toast('Alarm set for 5 seconds')">Alarm in 5 seconds</button>
   <button onclick="Spaila.cancelScheduledNotification(101); Spaila.cancelScheduledNotification(102); Spaila.toast('Cancelled')">Cancel alarms</button>
   <button onclick="Spaila.startKeepAlive('Keep-alive is on', 'Tap to open the app'); Spaila.toast('Keep-alive started')">Start keep-alive</button>
   <button onclick="Spaila.stopKeepAlive(); Spaila.toast('Keep-alive stopped')">Stop keep-alive</button>
