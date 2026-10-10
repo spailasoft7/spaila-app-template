@@ -480,10 +480,7 @@ public class MainActivity extends Activity {
     private void scheduleNotification(int id, String title, String message, long triggerAt) {
         AlarmManager alarmManager = getSystemService(AlarmManager.class);
         PendingIntent pending = alarmIntent(id, title, message, PendingIntent.FLAG_UPDATE_CURRENT);
-        Intent openApp = new Intent(this, MainActivity.class);
-        PendingIntent showIntent = PendingIntent.getActivity(this, 0, openApp,
-                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-        alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(triggerAt, showIntent), pending);
+        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending);
     }
 
     private void cancelScheduledNotification(int id) {
