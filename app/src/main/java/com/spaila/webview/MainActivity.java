@@ -66,6 +66,8 @@ public class MainActivity extends Activity {
     private final List<Runnable> pendingActions = new ArrayList<>();
     private boolean permissionRequestInFlight = false;
     private boolean pageReady = false; // true once the page has loaded (or the time limit passed)
+    private Handler splashHandler;
+    private Runnable splashRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,7 +164,9 @@ public class MainActivity extends Activity {
         });
 
         // Safety net: never get stuck on the splash forever.
-        new Handler(Looper.getMainLooper()).postDelayed(this::markPageReady, SPLASH_MAX_MS);
+        splashHandler = new Handler(Looper.getMainLooper());
+        splashRunnable = this::markPageReady;
+        splashHandler.postDelayed(splashRunnable, SPLASH_MAX_MS);
     }
 
     private void markPageReady() {
@@ -266,7 +270,8 @@ public class MainActivity extends Activity {
         try {
             JSONObject json = new JSONObject(message.getData());
             String fn = json.getString("fn");
-            JSONArray args = json.getJSONArray("args");
+            JSONArray args = json.optJSONArray("args");
+            if (args == null) args = new JSONArray();
 
             if (fn.equals("toast")) {
                 Toast.makeText(this, args.getString(0), Toast.LENGTH_SHORT).show();
@@ -424,7 +429,20 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (webView != null) webView.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (webView != null) webView.onResume();
+    }
+
+    @Override
     protected void onDestroy() {
+        if (splashHandler != null) splashHandler.removeCallbacks(splashRunnable);
         setFlashlight(false, false); // never leave the torch on after the app closes
         super.onDestroy();
     }
