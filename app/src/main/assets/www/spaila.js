@@ -1,11 +1,27 @@
 // Spaila bridge: lets web pages ask Android to do things.
 (function () {
+  var _callbacks = {};  // id -> {resolve, reject} for waiting two-way calls
+  var _nextId = 1;      // increases by 1 for each new call
+
   function send(fn, args) {
     if (window.SpailaNative) {
       window.SpailaNative.postMessage(JSON.stringify({ fn: fn, args: args }));
     } else {
       console.log("Spaila: not running inside the Android app", fn, args);
     }
+  }
+
+  // Like send(), but returns a Promise. Android will call _handleReply with the result.
+  function sendAndWait(fn, args) {
+    return new Promise(function (resolve, reject) {
+      if (!window.SpailaNative) {
+        reject(new Error("Not running inside the Android app"));
+        return;
+      }
+      var id = _nextId++;
+      _callbacks[id] = { resolve: resolve, reject: reject };
+      window.SpailaNative.postMessage(JSON.stringify({ fn: fn, args: args, id: id }));
+    });
   }
 
   window.Spaila = {
@@ -52,6 +68,18 @@
     },
     stopKeepAlive: function () {
       send("stopKeepAlive", []);
+    },
+    // Two-way: returns a Promise that resolves with battery level 0-100 (or -1).
+    getBatteryLevel: function () {
+      return sendAndWait("getBatteryLevel", []);
+    },
+    // Android calls this to deliver a reply. Do not call this yourself.
+    _handleReply: function (id, result, error) {
+      var cb = _callbacks[id];
+      if (!cb) return;
+      delete _callbacks[id];
+      if (error != null) { cb.reject(new Error(error)); }
+      else { cb.resolve(result); }
     }
   };
 })();

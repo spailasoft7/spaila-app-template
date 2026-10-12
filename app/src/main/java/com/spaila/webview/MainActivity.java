@@ -43,6 +43,9 @@ import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import android.content.IntentFilter;
+import android.os.BatteryManager;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -272,6 +275,7 @@ public class MainActivity extends Activity {
             String fn = json.getString("fn");
             JSONArray args = json.optJSONArray("args");
             if (args == null) args = new JSONArray();
+            int callId = json.optInt("id", -1); // -1 = no reply expected
 
             if (fn.equals("toast")) {
                 Toast.makeText(this, args.getString(0), Toast.LENGTH_SHORT).show();
@@ -316,6 +320,9 @@ public class MainActivity extends Activity {
 
             } else if (fn.equals("stopKeepAlive")) {
                 stopKeepAlive();
+
+            } else if (fn.equals("getBatteryLevel")) {
+                getBatteryLevel(callId);
 
             }
         } catch (Exception e) {
@@ -445,6 +452,38 @@ public class MainActivity extends Activity {
         if (splashHandler != null) splashHandler.removeCallbacks(splashRunnable);
         setFlashlight(false, false); // never leave the torch on after the app closes
         super.onDestroy();
+    }
+
+    // ---------- Two-way bridge ----------
+
+    // Sends a result back to JS. The Promise in the web page will resolve.
+    private void reply(int callId, String jsonValue) {
+        if (callId < 0 || webView == null) return;
+        final String js = "window.Spaila._handleReply(" + callId + "," + jsonValue + ",null)";
+        runOnUiThread(() -> webView.evaluateJavascript(js, null));
+    }
+
+    private void replyError(int callId, String errorMessage) {
+        if (callId < 0 || webView == null) return;
+        final String js = "window.Spaila._handleReply(" + callId + ",null,"
+                + JSONObject.quote(errorMessage) + ")";
+        runOnUiThread(() -> webView.evaluateJavascript(js, null));
+    }
+
+    private void getBatteryLevel(int callId) {
+        try {
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, ifilter);
+            int level = batteryStatus != null
+                    ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
+            int scale = batteryStatus != null
+                    ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
+            int percent = (level >= 0 && scale > 0)
+                    ? Math.round(level * 100f / scale) : -1;
+            reply(callId, String.valueOf(percent));
+        } catch (Exception e) {
+            replyError(callId, "Could not read battery level");
+        }
     }
 
     // ---------- Notification permission ----------
