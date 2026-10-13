@@ -19,6 +19,9 @@ android {
         versionName cfg.versionName
         buildConfigField "String", "START_PAGE", "\"${cfg.startPage}\""
         buildConfigField "int", "BAR_COLOR", "0xFF${cfg.barColor}"
+        buildConfigField "boolean", "FEATURE_FLASHLIGHT", "${cfg.getProperty('feature.flashlight', 'true')}"
+        buildConfigField "boolean", "FEATURE_KEEPALIVE", "${cfg.getProperty('feature.keepAlive', 'true')}"
+        buildConfigField "boolean", "FEATURE_TTS", "${cfg.getProperty('feature.tts', 'true')}"
         resValue "string", "app_name", cfg.appName
         resValue "color", "icon_background", "#${cfg.barColor}"
     }

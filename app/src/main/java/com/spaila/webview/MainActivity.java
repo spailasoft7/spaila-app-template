@@ -153,7 +153,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         });
 
         setupSpailaBridge();
-        tts = new TextToSpeech(this, this);
+        if (BuildConfig.FEATURE_TTS) { tts = new TextToSpeech(this, this); }
 
         String targetPage = getIntent().getStringExtra("target_page");
         String pageToLoad = (targetPage != null && !targetPage.isEmpty()) ? targetPage : START_PAGE;
@@ -319,15 +319,23 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 setKeepScreenOn(args.getBoolean(0));
 
             } else if (fn.equals("flashlight")) {
-                setFlashlight(args.getBoolean(0), true);
+                if (BuildConfig.FEATURE_FLASHLIGHT) {
+                    setFlashlight(args.getBoolean(0), true);
+                } else {
+                    Toast.makeText(this, "Flashlight feature is disabled in this app", Toast.LENGTH_SHORT).show();
+                }
 
             } else if (fn.equals("openBatterySettings")) {
                 openBatterySettings();
 
             } else if (fn.equals("startKeepAlive")) {
-                final String kTitle = args.getString(0);
-                final String kText = args.getString(1);
-                withNotificationPermission(() -> startKeepAlive(kTitle, kText));
+                if (BuildConfig.FEATURE_KEEPALIVE) {
+                    final String kTitle = args.getString(0);
+                    final String kText = args.getString(1);
+                    withNotificationPermission(() -> startKeepAlive(kTitle, kText));
+                } else {
+                    Toast.makeText(this, "Keep-alive service is disabled in this app", Toast.LENGTH_SHORT).show();
+                }
 
             } else if (fn.equals("stopKeepAlive")) {
                 stopKeepAlive();
