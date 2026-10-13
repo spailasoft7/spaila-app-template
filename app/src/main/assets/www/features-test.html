@@ -141,7 +141,9 @@
   <!-- 7. WIDGET & BACKGROUND -->
   <div class="section">
     <div class="section-title">🏃 Home Widget & Background</div>
-    <button onclick="Spaila.updateWidget('Spaila Soft', 'Updated from JS at ' + new Date().toLocaleTimeString()); Spaila.toast('Home widget updated!');">Update Home Widget Text</button>
+    <button onclick="Spaila.updateWidget('Task Progress', '3 of 4 tasks finished', 75); Spaila.toast('Widget set to 75% progress');">Update Widget (75% Progress)</button>
+    <button onclick="Spaila.updateWidget('Habit Goal', 'Goal 100% completed', 100); Spaila.toast('Widget set to 100%');">Update Widget (100% Progress)</button>
+    <button onclick="Spaila.updateWidget('Spaila Soft', 'No progress bar', -1); Spaila.toast('Widget text updated');">Update Widget (Hide Progress)</button>
     <button onclick="Spaila.startKeepAlive('Spaila Running', 'Keeps timers going in background')">Start Keep-Alive Service</button>
     <button class="amber" onclick="Spaila.stopKeepAlive(); Spaila.toast('Keep-alive stopped');">Stop Keep-Alive Service</button>
   </div>
@@ -162,6 +164,9 @@
 
   <script>
     // Called automatically if someone shares text to this app from another app!
+    window.onSpailaWidgetAction = function (action) {
+      alert('Widget action tapped: ' + action);
+    };
     window.onSpailaSharedText = function (text) {
       alert('Received shared text:\n' + text);
     };

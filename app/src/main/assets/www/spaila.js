@@ -98,9 +98,10 @@
     getDeviceInfo: function () {
       return sendAndWait("getDeviceInfo", []);
     },
-    // Updates the home screen widget card with title and text
-    updateWidget: function (title, text) {
-      send("updateWidget", [String(title || ""), String(text || "")]);
+    // Updates the home screen widget with title, text, and optional progress (0-100 or -1 to hide)
+    updateWidget: function (title, text, progress) {
+      var p = typeof progress === "number" ? Math.round(progress) : -1;
+      send("updateWidget", [String(title || ""), String(text || ""), p]);
     },
     // Plays a zero-latency system tone: "click", "beep", "success", "alert"
     playSound: function (type) {

@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:background="@drawable/widget_bg">
 
+    <!-- Header Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,33 +20,64 @@
             android:layout_weight="1"
             android:text="Spaila Soft"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             android:singleLine="true" />
 
+        <!-- Counter button (interactive without opening app) -->
         <TextView
+            android:id="@+id/widget_btn_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#334155"
+            android:paddingLeft="8dp"
+            android:paddingTop="3dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="3dp"
+            android:layout_marginEnd="6dp"
+            android:text="+1"
+            android:textColor="#38BDF8"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <!-- Deep link button (opens app into Add mode) -->
+        <TextView
+            android:id="@+id/widget_btn_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#2563EB"
-            android:paddingLeft="10dp"
-            android:paddingTop="4dp"
-            android:paddingRight="10dp"
-            android:paddingBottom="4dp"
-            android:text="OPEN"
+            android:paddingLeft="9dp"
+            android:paddingTop="3dp"
+            android:paddingRight="9dp"
+            android:paddingBottom="3dp"
+            android:text="＋ NEW"
             android:textColor="#FFFFFF"
             android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- Message / Task Content -->
     <TextView
         android:id="@+id/widget_text"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:gravity="center_vertical"
         android:text="Tap to update from app"
-        android:textColor="#94A3B8"
-        android:textSize="14sp"
+        android:textColor="#E2E8F0"
+        android:textSize="13sp"
         android:maxLines="3" />
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/widget_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="8dp"
+        android:max="100"
+        android:progress="50"
+        android:progressTint="#38BDF8"
+        android:progressBackgroundTint="#334155" />
 </LinearLayout>

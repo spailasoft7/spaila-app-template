@@ -164,6 +164,7 @@ public class MainActivity extends FragmentActivity implements TextToSpeech.OnIni
 
         setupSpailaBridge();
         handleIncomingShare(getIntent());
+        handleWidgetAction(getIntent());
 
         if (BuildConfig.FEATURE_TTS) { tts = new TextToSpeech(this, this); }
 
@@ -368,7 +369,8 @@ public class MainActivity extends FragmentActivity implements TextToSpeech.OnIni
                 getDeviceInfo(callId);
 
             } else if (fn.equals("updateWidget")) {
-                updateWidgetData(args.getString(0), args.getString(1));
+                int prog = args.length() > 2 ? args.optInt(2, -1) : -1;
+                updateWidgetData(args.getString(0), args.getString(1), prog);
 
             } else if (fn.equals("playSound")) {
                 if (BuildConfig.FEATURE_SOUNDS) {
@@ -522,6 +524,7 @@ public class MainActivity extends FragmentActivity implements TextToSpeech.OnIni
         setIntent(intent);
         String targetPage = intent.getStringExtra("target_page");
         handleIncomingShare(intent);
+        handleWidgetAction(intent);
         if (targetPage != null && !targetPage.isEmpty() && webView != null) {
             webView.loadUrl(ORIGIN + "/assets/www/" + targetPage);
         }
@@ -658,6 +661,18 @@ public class MainActivity extends FragmentActivity implements TextToSpeech.OnIni
     }
 
 
+
+    private void handleWidgetAction(Intent intent) {
+        if (intent != null && intent.hasExtra("widget_action")) {
+            String action = intent.getStringExtra("widget_action");
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (webView != null) {
+                    webView.evaluateJavascript("if(window.onSpailaWidgetAction) window.onSpailaWidgetAction(" + JSONObject.quote(action) + ");", null);
+                }
+            }, 800);
+        }
+    }
+
     private void handleIncomingShare(Intent intent) {
         if (intent != null && Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
             String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -752,11 +767,12 @@ public class MainActivity extends FragmentActivity implements TextToSpeech.OnIni
         }
     }
 
-    private void updateWidgetData(String title, String text) {
+    private void updateWidgetData(String title, String text, int progress) {
         getSharedPreferences(SpailaWidget.PREFS, MODE_PRIVATE)
                 .edit()
                 .putString(SpailaWidget.KEY_TITLE, title)
                 .putString(SpailaWidget.KEY_TEXT, text)
+                .putInt(SpailaWidget.KEY_PROGRESS, progress)
                 .apply();
         SpailaWidget.updateAllWidgets(this);
     }
