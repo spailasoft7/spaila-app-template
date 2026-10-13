@@ -525,10 +525,32 @@ public class MainActivity extends Activity {
         }
     }
 
+    // ---------- Alarm persistence ----------
+    // Alarms are saved here so they survive a phone restart.
+    static final String PREFS = "spaila_alarms";
+
+    private void saveAlarm(int id, String title, String message, long triggerAt) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("id", id);
+            obj.put("title", title);
+            obj.put("message", message);
+            obj.put("triggerAt", triggerAt);
+            getSharedPreferences(PREFS, MODE_PRIVATE)
+                    .edit().putString("alarm_" + id, obj.toString()).apply();
+        } catch (Exception ignored) {}
+    }
+
+    static void removeAlarm(Context context, int id) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().remove("alarm_" + id).apply();
+    }
+
     // ---------- Scheduled notifications ----------
 
     private PendingIntent alarmIntent(int id, String title, String message, int flags) {
         Intent intent = new Intent(this, AlarmReceiver.class);
+        intent.putExtra("id", id);
         intent.putExtra("title", title);
         intent.putExtra("message", message);
         return PendingIntent.getBroadcast(this, id, intent, flags | PendingIntent.FLAG_IMMUTABLE);
@@ -538,6 +560,7 @@ public class MainActivity extends Activity {
         AlarmManager alarmManager = getSystemService(AlarmManager.class);
         PendingIntent pending = alarmIntent(id, title, message, PendingIntent.FLAG_UPDATE_CURRENT);
         alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending);
+        saveAlarm(id, title, message, triggerAt);
     }
 
     private void cancelScheduledNotification(int id) {
@@ -547,5 +570,6 @@ public class MainActivity extends Activity {
             alarmManager.cancel(pending);
             pending.cancel();
         }
+        removeAlarm(this, id);
     }
 }

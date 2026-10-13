@@ -15,5 +15,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                 context,
                 title == null ? "" : title,
                 message == null ? "" : message);
+        // Remove from saved alarms — it fired, no need to reschedule after reboot.
+        int id = intent.getIntExtra("id", -1);
+        if (id >= 0) MainActivity.removeAlarm(context, id);
     }
 }
