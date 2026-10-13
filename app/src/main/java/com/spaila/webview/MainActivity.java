@@ -146,7 +146,9 @@ public class MainActivity extends Activity {
 
         setupSpailaBridge();
 
-        webView.loadUrl(ORIGIN + "/assets/www/" + START_PAGE);
+        String targetPage = getIntent().getStringExtra("target_page");
+        String pageToLoad = (targetPage != null && !targetPage.isEmpty()) ? targetPage : START_PAGE;
+        webView.loadUrl(ORIGIN + "/assets/www/" + pageToLoad);
     }
 
     // ---------- Splash screen ----------
@@ -432,6 +434,17 @@ public class MainActivity extends Activity {
             cm.setTorchMode(id, on);
         } catch (Exception e) {
             if (showErrors) Toast.makeText(this, "Flashlight not available right now", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        String targetPage = intent.getStringExtra("target_page");
+        if (targetPage != null && !targetPage.isEmpty() && webView != null) {
+            webView.loadUrl(ORIGIN + "/assets/www/" + targetPage);
         }
     }
 

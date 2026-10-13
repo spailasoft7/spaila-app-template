@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="features_test"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_star"
+        android:shortcutShortLabel="@string/shortcut_features_short"
+        android:shortcutLongLabel="@string/shortcut_features_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.spaila.webview.MainActivity">
+            <extra android:name="target_page" android:value="features-test.html" />
+        </intent>
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>
