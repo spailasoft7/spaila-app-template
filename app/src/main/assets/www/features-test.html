@@ -22,6 +22,8 @@
   <button onclick="Spaila.keepScreenOn(false); Spaila.toast('Back to normal')">Keep screen on: OFF</button>
   <button onclick="Spaila.flashlight(true)">Flashlight ON</button>
   <button onclick="Spaila.flashlight(false)">Flashlight OFF</button>
+  <button onclick="Spaila.getBatteryLevel().then(function(l){Spaila.toast('Battery: '+l+'%');}).catch(function(e){Spaila.toast('Error: '+e.message);})">Get Battery Level</button>
+  <button onclick="Spaila.getBatteryLevel().then(function(l){Spaila.toast('Battery: '+l+'%');}).catch(function(e){Spaila.toast('Error: '+e.message);})">Get Battery Level</button>
 <script>
   window.onSpailaBack = function () { location.href = 'index.html'; return true; };
 </script>
