@@ -46,6 +46,12 @@ import androidx.webkit.WebViewFeature;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 
+
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
+import android.speech.tts.TextToSpeech;
+import android.view.HapticFeedbackConstants;
+import java.util.Locale;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -54,7 +60,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements TextToSpeech.OnInitListener {
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
 
     // ----- Per-app settings (they come from app.properties) -----
     private static final String START_PAGE = BuildConfig.START_PAGE;
@@ -145,6 +153,7 @@ public class MainActivity extends Activity {
         });
 
         setupSpailaBridge();
+        tts = new TextToSpeech(this, this);
 
         String targetPage = getIntent().getStringExtra("target_page");
         String pageToLoad = (targetPage != null && !targetPage.isEmpty()) ? targetPage : START_PAGE;
@@ -326,6 +335,18 @@ public class MainActivity extends Activity {
             } else if (fn.equals("getBatteryLevel")) {
                 getBatteryLevel(callId);
 
+            } else if (fn.equals("speak")) {
+                speakText(args.getString(0), (float) args.getDouble(1), (float) args.getDouble(2));
+
+            } else if (fn.equals("stopSpeaking")) {
+                if (tts != null) tts.stop();
+
+            } else if (fn.equals("haptic")) {
+                performHaptic(args.getString(0));
+
+            } else if (fn.equals("getDeviceInfo")) {
+                getDeviceInfo(callId);
+
             }
         } catch (Exception e) {
             // Ignore bad messages for now
@@ -463,7 +484,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (splashHandler != null) splashHandler.removeCallbacks(splashRunnable);
-        setFlashlight(false, false); // never leave the torch on after the app closes
+        setFlashlight(false, false);
+        if (tts != null) { tts.stop(); tts.shutdown(); } // never leave the torch on after the app closes
         super.onDestroy();
     }
 
@@ -481,6 +503,96 @@ public class MainActivity extends Activity {
         final String js = "window.Spaila._handleReply(" + callId + ",null,"
                 + JSONObject.quote(errorMessage) + ")";
         runOnUiThread(() -> webView.evaluateJavascript(js, null));
+    }
+
+
+    @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            tts.setLanguage(Locale.getDefault());
+            ttsReady = true;
+        }
+    }
+
+    private void speakText(String text, float pitch, float rate) {
+        if (!ttsReady || tts == null || text == null || text.isEmpty()) return;
+        tts.setPitch(Math.max(0.1f, Math.min(pitch, 2.0f)));
+        tts.setSpeechRate(Math.max(0.1f, Math.min(rate, 2.0f)));
+        if (Build.VERSION.SDK_INT >= 21) {
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "spaila_tts");
+        } else {
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+        }
+    }
+
+    private void performHaptic(String style) {
+        if (webView == null) return;
+        int feedback;
+        switch (style) {
+            case "heavy":
+                feedback = HapticFeedbackConstants.LONG_PRESS;
+                break;
+            case "tick":
+                if (Build.VERSION.SDK_INT >= 27) {
+                    feedback = HapticFeedbackConstants.KEYBOARD_TAP;
+                } else {
+                    feedback = HapticFeedbackConstants.VIRTUAL_KEY;
+                }
+                break;
+            case "double":
+                vibrate(40);
+                new Handler(Looper.getMainLooper()).postDelayed(() -> vibrate(40), 100);
+                return;
+            case "click":
+            default:
+                feedback = HapticFeedbackConstants.VIRTUAL_KEY;
+                break;
+        }
+        webView.performHapticFeedback(feedback, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+    }
+
+    private void getDeviceInfo(int callId) {
+        try {
+            JSONObject info = new JSONObject();
+            info.put("osVersion", "Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")");
+            info.put("brand", Build.MANUFACTURER);
+            info.put("model", Build.MODEL);
+            info.put("appVersion", BuildConfig.VERSION_NAME);
+
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            boolean isOnline = false;
+            String netType = "offline";
+            if (cm != null) {
+                if (Build.VERSION.SDK_INT >= 23) {
+                    android.net.Network network = cm.getActiveNetwork();
+                    NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+                    if (caps != null) {
+                        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                            isOnline = true;
+                            netType = "wifi";
+                        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                            isOnline = true;
+                            netType = "cellular";
+                        } else if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                            isOnline = true;
+                            netType = "other";
+                        }
+                    }
+                } else {
+                    android.net.NetworkInfo netInfo = cm.getActiveNetworkInfo();
+                    if (netInfo != null && netInfo.isConnected()) {
+                        isOnline = true;
+                        netType = netInfo.getTypeName().toLowerCase();
+                    }
+                }
+            }
+            info.put("isOnline", isOnline);
+            info.put("networkType", netType);
+
+            reply(callId, info.toString());
+        } catch (Exception e) {
+            replyError(callId, "Failed to get device info: " + e.getMessage());
+        }
     }
 
     private void getBatteryLevel(int callId) {

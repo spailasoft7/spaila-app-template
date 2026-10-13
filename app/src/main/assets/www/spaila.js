@@ -73,6 +73,21 @@
     getBatteryLevel: function () {
       return sendAndWait("getBatteryLevel", []);
     },
+    // Speak text using the phone's built-in voice engine (offline)
+    speak: function (text, pitch, rate) {
+      send("speak", [String(text || ""), Number(pitch || 1.0), Number(rate || 1.0)]);
+    },
+    stopSpeaking: function () {
+      send("stopSpeaking", []);
+    },
+    // Precise tactile click: "click", "tick", "heavy", or "double"
+    haptic: function (style) {
+      send("haptic", [String(style || "click")]);
+    },
+    // Two-way: returns { osVersion, brand, model, appVersion, isOnline, networkType }
+    getDeviceInfo: function () {
+      return sendAndWait("getDeviceInfo", []);
+    },
     // Android calls this to deliver a reply. Do not call this yourself.
     _handleReply: function (id, result, error) {
       var cb = _callbacks[id];
