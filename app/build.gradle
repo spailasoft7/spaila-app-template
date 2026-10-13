@@ -2,28 +2,47 @@ plugins {
     id 'com.android.application'
 }
 
-// Read this app's settings from app.properties (in the repo root)
-def cfg = new Properties()
-file("../app.properties").withInputStream { cfg.load(it) }
+import groovy.json.JsonSlurper
+
+// Read app settings from app-config.json (inside www assets)
+def configFile = file("src/main/assets/www/app-config.json")
+def cfgJson = configFile.exists() ? new JsonSlurper().parse(configFile) : null
+
+def legacyProp = new Properties()
+def propFile = file("../app.properties")
+if (propFile.exists()) {
+    propFile.withInputStream { legacyProp.load(it) }
+}
+
+def getCfg = { key, defaultVal ->
+    if (cfgJson != null) {
+        if (key.startsWith("feature.")) {
+            def featName = key.substring(8)
+            return (cfgJson.features != null && cfgJson.features[featName] != null) ? cfgJson.features[featName].toString() : defaultVal
+        }
+        return cfgJson[key] != null ? cfgJson[key].toString() : defaultVal
+    }
+    return legacyProp.getProperty(key, defaultVal)
+}
 
 android {
     namespace 'com.spaila.webview'   // code package: leave as it is
     compileSdk 36
 
     defaultConfig {
-        applicationId cfg.appId   // the app's permanent ID on phones and Google Play
+        applicationId getCfg("appId", "com.spaila.newapp")   // the app's permanent ID on phones and Google Play
         minSdk 24
         targetSdk 36
         // GitHub gives every build a higher number, which Google Play requires
         versionCode Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
-        versionName cfg.versionName
-        buildConfigField "String", "START_PAGE", "\"${cfg.startPage}\""
-        buildConfigField "int", "BAR_COLOR", "0xFF${cfg.barColor}"
-        buildConfigField "boolean", "FEATURE_FLASHLIGHT", "${cfg.getProperty('feature.flashlight', 'true')}"
-        buildConfigField "boolean", "FEATURE_KEEPALIVE", "${cfg.getProperty('feature.keepAlive', 'true')}"
-        buildConfigField "boolean", "FEATURE_TTS", "${cfg.getProperty('feature.tts', 'true')}"
-        resValue "string", "app_name", cfg.appName
-        resValue "color", "icon_background", "#${cfg.barColor}"
+        versionName getCfg("versionName", "1.0.0")
+        buildConfigField "String", "START_PAGE", "\"${getCfg('startPage', 'index.html')}\""
+        buildConfigField "int", "BAR_COLOR", "0xFF${getCfg('barColor', '0A1F4C')}"
+        buildConfigField "boolean", "FEATURE_FLASHLIGHT", "${getCfg('feature.flashlight', 'true')}"
+        buildConfigField "boolean", "FEATURE_KEEPALIVE", "${getCfg('feature.keepAlive', 'true')}"
+        buildConfigField "boolean", "FEATURE_TTS", "${getCfg('feature.tts', 'true')}"
+        resValue "string", "app_name", getCfg("appName", "New App")
+        resValue "color", "icon_background", "#${getCfg('barColor', '0A1F4C')}"
     }
 
     // The signing key arrives from GitHub Secrets while building. It is never in the repo.

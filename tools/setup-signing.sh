@@ -6,8 +6,12 @@ unset GITHUB_TOKEN GH_TOKEN
 command -v keytool >/dev/null || { echo "STOP: keytool not found (Java is missing)"; exit 1; }
 gh auth status >/dev/null 2>&1 || { echo "STOP: run  gh auth login --web  first, then run this again"; exit 1; }
 
-APP_ID=$(grep '^appId=' app.properties | cut -d= -f2)
-[ "$APP_ID" = "com.spaila.newapp" ] && { echo "STOP: edit app.properties first (the app ID is still the placeholder)"; exit 1; }
+if [ -f "app/src/main/assets/www/app-config.json" ]; then
+  APP_ID=$(python3 -c "import json; print(json.load(open('app/src/main/assets/www/app-config.json')).get('appId',''))")
+else
+  APP_ID=$(grep '^appId=' app.properties | cut -d= -f2)
+fi
+[ "$APP_ID" = "com.spaila.newapp" ] && { echo "STOP: edit app-config.json first (the appId is still the placeholder)"; exit 1; }
 SLUG=${APP_ID##*.}
 KS="keys/${SLUG}-upload.jks"
 

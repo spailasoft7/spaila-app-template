@@ -24,7 +24,17 @@
     });
   }
 
+  // Load local config asynchronously
+  var _config = {};
+  try {
+    fetch('app-config.json').then(function(r){return r.json();}).then(function(c){
+      _config = c;
+      window.Spaila.config = c;
+    }).catch(function(){});
+  } catch(e) {}
+
   window.Spaila = {
+    config: _config,
     toast: function (text) {
       send("toast", [String(text)]);
     },
