@@ -25,6 +25,7 @@
   <button onclick="Spaila.speak('Welcome to Spaila Soft!')">Speak: Welcome</button>
   <button onclick="Spaila.haptic('click')">Haptic Click</button>
   <button onclick="Spaila.haptic('heavy')">Haptic Heavy</button>
+  <button onclick="Spaila.updateWidget('Spaila Task', 'Updated from JS at ' + new Date().toLocaleTimeString()); Spaila.toast('Widget text updated!');">Update Home Widget</button>
   <button onclick="Spaila.getDeviceInfo().then(function(d){Spaila.toast(d.brand+' '+d.model+' ('+d.networkType+')');}).catch(function(e){Spaila.toast('Err: '+e.message);})">Check Device & Network</button>
   <button onclick="Spaila.getBatteryLevel().then(function(l){Spaila.toast('Battery: '+l+'%');}).catch(function(e){Spaila.toast('Error: '+e.message);})">Get Battery Level</button>
   <button onclick="Spaila.getBatteryLevel().then(function(l){Spaila.toast('Battery: '+l+'%');}).catch(function(e){Spaila.toast('Error: '+e.message);})">Get Battery Level</button>

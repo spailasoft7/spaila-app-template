@@ -347,6 +347,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             } else if (fn.equals("getDeviceInfo")) {
                 getDeviceInfo(callId);
 
+            } else if (fn.equals("updateWidget")) {
+                updateWidgetData(args.getString(0), args.getString(1));
+
             }
         } catch (Exception e) {
             // Ignore bad messages for now
@@ -549,6 +552,16 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 break;
         }
         webView.performHapticFeedback(feedback, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+    }
+
+
+    private void updateWidgetData(String title, String text) {
+        getSharedPreferences(SpailaWidget.PREFS, MODE_PRIVATE)
+                .edit()
+                .putString(SpailaWidget.KEY_TITLE, title)
+                .putString(SpailaWidget.KEY_TEXT, text)
+                .apply();
+        SpailaWidget.updateAllWidgets(this);
     }
 
     private void getDeviceInfo(int callId) {

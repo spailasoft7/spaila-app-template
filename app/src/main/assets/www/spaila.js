@@ -88,6 +88,10 @@
     getDeviceInfo: function () {
       return sendAndWait("getDeviceInfo", []);
     },
+    // Updates the home screen widget card with title and text
+    updateWidget: function (title, text) {
+      send("updateWidget", [String(title || ""), String(text || "")]);
+    },
     // Android calls this to deliver a reply. Do not call this yourself.
     _handleReply: function (id, result, error) {
       var cb = _callbacks[id];
