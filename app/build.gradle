@@ -41,6 +41,10 @@ android {
         buildConfigField "boolean", "FEATURE_FLASHLIGHT", "${getCfg('feature.flashlight', 'true')}"
         buildConfigField "boolean", "FEATURE_KEEPALIVE", "${getCfg('feature.keepAlive', 'true')}"
         buildConfigField "boolean", "FEATURE_TTS", "${getCfg('feature.tts', 'true')}"
+        buildConfigField "boolean", "FEATURE_SOUNDS", "${getCfg('feature.sounds', 'true')}"
+        buildConfigField "boolean", "FEATURE_BRIGHTNESS", "${getCfg('feature.brightness', 'true')}"
+        buildConfigField "boolean", "FEATURE_WHATSAPP", "${getCfg('feature.whatsapp', 'true')}"
+        buildConfigField "boolean", "FEATURE_RATE_APP", "${getCfg('feature.rateApp', 'true')}"
         resValue "string", "app_name", getCfg("appName", "New App")
         resValue "color", "icon_background", "#${getCfg('barColor', '0A1F4C')}"
     }

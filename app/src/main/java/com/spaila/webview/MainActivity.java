@@ -49,6 +49,8 @@ import android.os.BatteryManager;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.speech.tts.TextToSpeech;
 import android.view.HapticFeedbackConstants;
 import java.util.Locale;
@@ -358,6 +360,26 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             } else if (fn.equals("updateWidget")) {
                 updateWidgetData(args.getString(0), args.getString(1));
 
+            } else if (fn.equals("playSound")) {
+                if (BuildConfig.FEATURE_SOUNDS) {
+                    playSystemSound(args.getString(0));
+                }
+
+            } else if (fn.equals("setBrightness")) {
+                if (BuildConfig.FEATURE_BRIGHTNESS) {
+                    setScreenBrightness((float) args.getDouble(0));
+                }
+
+            } else if (fn.equals("openWhatsApp")) {
+                if (BuildConfig.FEATURE_WHATSAPP) {
+                    openWhatsAppChat(args.getString(0), args.getString(1));
+                }
+
+            } else if (fn.equals("rateApp")) {
+                if (BuildConfig.FEATURE_RATE_APP) {
+                    openPlayStoreRating();
+                }
+
             }
         } catch (Exception e) {
             // Ignore bad messages for now
@@ -562,6 +584,65 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         webView.performHapticFeedback(feedback, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
     }
 
+
+
+    private void playSystemSound(String type) {
+        try {
+            ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80);
+            switch (type) {
+                case "beep":
+                    toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 150);
+                    break;
+                case "success":
+                    toneGen.startTone(ToneGenerator.TONE_PROP_ACK, 200);
+                    break;
+                case "alert":
+                    toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
+                    break;
+                case "click":
+                default:
+                    toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 50);
+                    break;
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void setScreenBrightness(float brightness) {
+        runOnUiThread(() -> {
+            try {
+                WindowManager.LayoutParams lp = getWindow().getAttributes();
+                if (brightness < 0) {
+                    lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+                } else {
+                    lp.screenBrightness = Math.max(0.01f, Math.min(1.0f, brightness));
+                }
+                getWindow().setAttributes(lp);
+            } catch (Exception ignored) {}
+        });
+    }
+
+    private void openWhatsAppChat(String phone, String message) {
+        try {
+            String cleanPhone = phone.replaceAll("[^0-9]", "");
+            String url = "https://api.whatsapp.com/send?phone=" + cleanPhone + "&text=" + Uri.encode(message);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not open WhatsApp", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openPlayStoreRating() {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
+        } catch (Exception e) {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
+            } catch (Exception e2) {
+                Toast.makeText(this, "Could not open Play Store", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
     private void updateWidgetData(String title, String text) {
         getSharedPreferences(SpailaWidget.PREFS, MODE_PRIVATE)

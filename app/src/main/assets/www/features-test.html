@@ -1,36 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Feature tests</title>
-<script src="spaila.js"></script>
-<style>
-  body { margin:0; padding:24px; background:#0A1F4C; color:#fff; font-family:sans-serif; }
-  h1 { font-size:22px; }
-  button { display:block; width:100%; margin:10px 0; padding:14px; font-size:17px; border:0; border-radius:12px; }
-  a { color:#9cc2ff; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spaila Native Feature Tests</title>
+  <script src="spaila.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #0A1F4C;
+      color: #FFFFFF;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding-bottom: 40px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    a.back {
+      color: #9CC2FF;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+    .section {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #9CC2FF;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 0;
+      border-radius: 10px;
+      background: #1E3A8A;
+      color: #FFFFFF;
+      text-align: left;
+    }
+    button:active {
+      background: #2563EB;
+      transform: scale(0.99);
+    }
+    button.green {
+      background: #166534;
+      color: #DCFCE7;
+    }
+    button.amber {
+      background: #854D0E;
+      color: #FEF9C3;
+    }
+  </style>
 </head>
 <body>
-  <p><a href="index.html">Back</a></p>
-  <h1>Feature tests</h1>
-  <button onclick="Spaila.vibrate(300)">Vibrate</button>
-  <button onclick="Spaila.share('Hello from my Spaila app!')">Share</button>
-  <button onclick="Spaila.copyToClipboard('Copied from Spaila!'); Spaila.toast('Copied. Paste somewhere to check.')">Copy to clipboard</button>
-  <button onclick="Spaila.keepScreenOn(true); Spaila.toast('Screen will stay on')">Keep screen on: ON</button>
-  <button onclick="Spaila.keepScreenOn(false); Spaila.toast('Back to normal')">Keep screen on: OFF</button>
-  <button onclick="Spaila.flashlight(true)">Flashlight ON</button>
-  <button onclick="Spaila.flashlight(false)">Flashlight OFF</button>
-  <button onclick="Spaila.speak('Welcome to Spaila Soft!')">Speak: Welcome</button>
-  <button onclick="Spaila.haptic('click')">Haptic Click</button>
-  <button onclick="Spaila.haptic('heavy')">Haptic Heavy</button>
-  <button onclick="Spaila.updateWidget('Spaila Task', 'Updated from JS at ' + new Date().toLocaleTimeString()); Spaila.toast('Widget text updated!');">Update Home Widget</button>
-  <button onclick="Spaila.getDeviceInfo().then(function(d){Spaila.toast(d.brand+' '+d.model+' ('+d.networkType+')');}).catch(function(e){Spaila.toast('Err: '+e.message);})">Check Device & Network</button>
-  <button onclick="Spaila.getBatteryLevel().then(function(l){Spaila.toast('Battery: '+l+'%');}).catch(function(e){Spaila.toast('Error: '+e.message);})">Get Battery Level</button>
-  <button onclick="Spaila.getBatteryLevel().then(function(l){Spaila.toast('Battery: '+l+'%');}).catch(function(e){Spaila.toast('Error: '+e.message);})">Get Battery Level</button>
-<script>
-  window.onSpailaBack = function () { location.href = 'index.html'; return true; };
-</script>
+
+  <header>
+    <a href="index.html" class="back">← Back</a>
+    <h1>Native Feature Suite</h1>
+  </header>
+
+  <!-- 1. NOTIFICATIONS & ALARMS -->
+  <div class="section">
+    <div class="section-title">📢 Notifications & Alarms</div>
+    <button onclick="Spaila.toast('Toast message popped up!')">Toast Popup</button>
+    <button onclick="Spaila.showNotification('Spaila App', 'Instant notification from JavaScript!')">Notify Now</button>
+    <button onclick="Spaila.scheduleNotification(101, 'Spaila Alarm', '15 seconds elapsed!', 15); Spaila.toast('Alarm scheduled for +15s');">Schedule Alarm (+15 sec)</button>
+    <button class="amber" onclick="Spaila.cancelScheduledNotification(101); Spaila.toast('Alarm 101 cancelled');">Cancel Alarm</button>
+  </div>
+
+  <!-- 2. BATTERY & DEVICE INFO (TWO-WAY) -->
+  <div class="section">
+    <div class="section-title">🔋 Battery & Device (Two-Way)</div>
+    <button class="green" onclick="Spaila.getBatteryLevel().then(function(l){ Spaila.toast('Battery: ' + l + '%'); }).catch(function(e){ Spaila.toast('Err: ' + e.message); })">Get Battery Level</button>
+    <button class="green" onclick="Spaila.getDeviceInfo().then(function(d){ alert(JSON.stringify(d, null, 2)); }).catch(function(e){ Spaila.toast('Err: ' + e.message); })">Get Device & Network Info</button>
+    <button onclick="Spaila.openBatterySettings()">Open Battery Optimization Settings</button>
+  </div>
+
+  <!-- 3. VOICE & HAPTICS -->
+  <div class="section">
+    <div class="section-title">🗣️ Voice & Haptics</div>
+    <button onclick="Spaila.speak('Welcome Given! Text to speech is working offline.', 1.0, 1.0)">Speak: Welcome Message</button>
+    <button onclick="Spaila.stopSpeaking()">Stop Speaking</button>
+    <button onclick="Spaila.haptic('click')">Haptic: Subtle Click</button>
+    <button onclick="Spaila.haptic('tick')">Haptic: Tick</button>
+    <button onclick="Spaila.haptic('heavy')">Haptic: Heavy Press</button>
+    <button onclick="Spaila.haptic('double')">Haptic: Double Pulse</button>
+    <button onclick="Spaila.vibrate(300)">Raw Vibrate (300ms)</button>
+  </div>
+
+  <!-- 4. SOUND EFFECTS -->
+  <div class="section">
+    <div class="section-title">🔊 Native Sound Effects (Zero-Lag)</div>
+    <button onclick="Spaila.playSound('click')">Sound: Click</button>
+    <button onclick="Spaila.playSound('beep')">Sound: Beep</button>
+    <button onclick="Spaila.playSound('success')">Sound: Success</button>
+    <button onclick="Spaila.playSound('alert')">Sound: Alert</button>
+  </div>
+
+  <!-- 5. SCREEN & HARDWARE -->
+  <div class="section">
+    <div class="section-title">📱 Screen, Brightness & Torch</div>
+    <button onclick="Spaila.keepScreenOn(true); Spaila.toast('Screen will stay on')">Keep Screen On: ON</button>
+    <button onclick="Spaila.keepScreenOn(false); Spaila.toast('Screen back to normal')">Keep Screen On: OFF</button>
+    <button onclick="Spaila.setBrightness(0.1); Spaila.toast('Brightness: 10% (Dim)')">Brightness: 10% (Dim)</button>
+    <button onclick="Spaila.setBrightness(1.0); Spaila.toast('Brightness: 100% (Max)')">Brightness: 100% (Max)</button>
+    <button onclick="Spaila.setBrightness(-1); Spaila.toast('Brightness: System Auto')">Brightness: Auto/Default</button>
+    <button onclick="Spaila.flashlight(true)">Flashlight: ON</button>
+    <button onclick="Spaila.flashlight(false)">Flashlight: OFF</button>
+  </div>
+
+  <!-- 6. SYSTEM, CLIPBOARD & SHARE -->
+  <div class="section">
+    <div class="section-title">📋 Clipboard & Share</div>
+    <button onclick="Spaila.copyToClipboard('Copied text from Spaila template!'); Spaila.toast('Copied to clipboard');">Copy Text</button>
+    <button onclick="Spaila.share('Check out my new Android app built with Spaila Soft!')">Open Share Sheet</button>
+  </div>
+
+  <!-- 7. WIDGET & BACKGROUND -->
+  <div class="section">
+    <div class="section-title">🏃 Home Widget & Background</div>
+    <button onclick="Spaila.updateWidget('Spaila Soft', 'Updated from JS at ' + new Date().toLocaleTimeString()); Spaila.toast('Home widget updated!');">Update Home Widget Text</button>
+    <button onclick="Spaila.startKeepAlive('Spaila Running', 'Keeps timers going in background')">Start Keep-Alive Service</button>
+    <button class="amber" onclick="Spaila.stopKeepAlive(); Spaila.toast('Keep-alive stopped');">Stop Keep-Alive Service</button>
+  </div>
+
+  <!-- 8. SOCIAL & APP STORE -->
+  <div class="section">
+    <div class="section-title">🌐 WhatsApp & Google Play</div>
+    <button onclick="Spaila.openWhatsApp('+27000000000', 'Hello from my Spaila app!')">Open WhatsApp Chat</button>
+    <button onclick="Spaila.rateApp()">Rate App on Google Play</button>
+  </div>
+
+  <script>
+    // Handle physical Android back button to navigate to index.html
+    window.onSpailaBack = function () {
+      location.href = 'index.html';
+      return true;
+    };
+  </script>
 </body>
 </html>

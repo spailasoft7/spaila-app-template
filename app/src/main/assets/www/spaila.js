@@ -102,6 +102,22 @@
     updateWidget: function (title, text) {
       send("updateWidget", [String(title || ""), String(text || "")]);
     },
+    // Plays a zero-latency system tone: "click", "beep", "success", "alert"
+    playSound: function (type) {
+      send("playSound", [String(type || "click")]);
+    },
+    // Sets screen brightness: 0.0 (dimmest) to 1.0 (full brightness), or -1 for system default
+    setBrightness: function (level) {
+      send("setBrightness", [Number(level)]);
+    },
+    // Opens WhatsApp chat directly to phone number (e.g. "+27123456789") with pre-filled message
+    openWhatsApp: function (phone, message) {
+      send("openWhatsApp", [String(phone || ""), String(message || "")]);
+    },
+    // Opens Google Play Store to rate this app
+    rateApp: function () {
+      send("rateApp", []);
+    },
     // Android calls this to deliver a reply. Do not call this yourself.
     _handleReply: function (id, result, error) {
       var cb = _callbacks[id];
