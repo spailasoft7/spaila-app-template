@@ -45,6 +45,8 @@ android {
         buildConfigField "boolean", "FEATURE_BRIGHTNESS", "${getCfg('feature.brightness', 'true')}"
         buildConfigField "boolean", "FEATURE_WHATSAPP", "${getCfg('feature.whatsapp', 'true')}"
         buildConfigField "boolean", "FEATURE_RATE_APP", "${getCfg('feature.rateApp', 'true')}"
+        buildConfigField "boolean", "FEATURE_BIOMETRICS", "${getCfg('feature.biometrics', 'true')}"
+        buildConfigField "boolean", "FEATURE_SPEECH_TO_TEXT", "${getCfg('feature.speechToText', 'true')}"
         resValue "string", "app_name", getCfg("appName", "New App")
         resValue "color", "icon_background", "#${getCfg('barColor', '0A1F4C')}"
     }
@@ -83,4 +85,6 @@ android {
 
 dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.biometric:biometric:1.1.0'
+    implementation 'androidx.fragment:fragment:1.8.5'
 }

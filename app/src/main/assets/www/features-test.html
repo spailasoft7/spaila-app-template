@@ -153,7 +153,18 @@
     <button onclick="Spaila.rateApp()">Rate App on Google Play</button>
   </div>
 
+  <!-- 9. SECURITY & VOICE INPUT -->
+  <div class="section">
+    <div class="section-title">🔐 Biometrics & Voice Input (Two-Way)</div>
+    <button class="green" onclick="Spaila.authenticate('Unlock Spaila Test').then(function(ok){ Spaila.toast(ok ? 'Authenticated successfully!' : 'Auth failed or cancelled'); }).catch(function(e){ Spaila.toast('Err: ' + e.message); })">Biometric / Fingerprint Unlock</button>
+    <button class="green" onclick="Spaila.startSpeechRecognition('Say something...').then(function(text){ alert('You said: ' + text); }).catch(function(e){ Spaila.toast('Err: ' + e.message); })">Speech-To-Text (Voice Dictation)</button>
+  </div>
+
   <script>
+    // Called automatically if someone shares text to this app from another app!
+    window.onSpailaSharedText = function (text) {
+      alert('Received shared text:\n' + text);
+    };
     // Handle physical Android back button to navigate to index.html
     window.onSpailaBack = function () {
       location.href = 'index.html';

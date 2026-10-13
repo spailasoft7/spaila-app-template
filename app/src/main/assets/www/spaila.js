@@ -114,6 +114,14 @@
     openWhatsApp: function (phone, message) {
       send("openWhatsApp", [String(phone || ""), String(message || "")]);
     },
+    // Authenticates using Fingerprint, Face, or Phone PIN. Returns Promise<boolean>
+    authenticate: function (prompt) {
+      return sendAndWait("authenticate", [String(prompt || "Verify your identity")]);
+    },
+    // Opens voice recognition dialog and returns recognized spoken text as a Promise<string>
+    startSpeechRecognition: function (prompt) {
+      return sendAndWait("startSpeechRecognition", [String(prompt || "Speak now...")]);
+    },
     // Opens Google Play Store to rate this app
     rateApp: function () {
       send("rateApp", []);

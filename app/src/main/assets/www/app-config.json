@@ -12,6 +12,8 @@
     "brightness": true,
     "whatsapp": true,
     "rateApp": true,
-    "widgets": true
+    "widgets": true,
+    "biometrics": true,
+    "speechToText": true
   }
 }

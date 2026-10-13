@@ -12,7 +12,7 @@ import android.provider.Settings;
 import android.view.WindowManager;
 
 import android.Manifest;
-import android.app.Activity;
+import androidx.fragment.app.FragmentActivity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -51,6 +51,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
+import android.speech.RecognizerIntent;
+import java.util.concurrent.Executor;
+
 import android.speech.tts.TextToSpeech;
 import android.view.HapticFeedbackConstants;
 import java.util.Locale;
@@ -62,7 +68,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends Activity implements TextToSpeech.OnInitListener {
+public class MainActivity extends FragmentActivity implements TextToSpeech.OnInitListener {
     private TextToSpeech tts;
     private boolean ttsReady = false;
 
@@ -78,7 +84,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private WebView webView;
     private final List<Runnable> pendingActions = new ArrayList<>();
     private boolean permissionRequestInFlight = false;
-    private boolean pageReady = false; // true once the page has loaded (or the time limit passed)
+    private boolean pageReady = false;
+    private int pendingSpeechCallId = -1; // true once the page has loaded (or the time limit passed)
     private Handler splashHandler;
     private Runnable splashRunnable;
 
@@ -154,7 +161,10 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             }
         });
 
+
         setupSpailaBridge();
+        handleIncomingShare(getIntent());
+
         if (BuildConfig.FEATURE_TTS) { tts = new TextToSpeech(this, this); }
 
         String targetPage = getIntent().getStringExtra("target_page");
@@ -380,6 +390,20 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                     openPlayStoreRating();
                 }
 
+            } else if (fn.equals("authenticate")) {
+                if (BuildConfig.FEATURE_BIOMETRICS) {
+                    authenticateBiometric(callId, args.optString(0, "Authenticate"));
+                } else {
+                    replyError(callId, "Biometrics feature is disabled");
+                }
+
+            } else if (fn.equals("startSpeechRecognition")) {
+                if (BuildConfig.FEATURE_SPEECH_TO_TEXT) {
+                    startSpeechToText(callId, args.optString(0, "Speak now..."));
+                } else {
+                    replyError(callId, "Speech-to-text is disabled");
+                }
+
             }
         } catch (Exception e) {
             // Ignore bad messages for now
@@ -497,6 +521,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         super.onNewIntent(intent);
         setIntent(intent);
         String targetPage = intent.getStringExtra("target_page");
+        handleIncomingShare(intent);
         if (targetPage != null && !targetPage.isEmpty() && webView != null) {
             webView.loadUrl(ORIGIN + "/assets/www/" + targetPage);
         }
@@ -629,6 +654,89 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             startActivity(intent);
         } catch (Exception e) {
             Toast.makeText(this, "Could not open WhatsApp", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void handleIncomingShare(Intent intent) {
+        if (intent != null && Intent.ACTION_SEND.equals(intent.getAction()) && "text/plain".equals(intent.getType())) {
+            String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+            if (sharedText != null && !sharedText.isEmpty()) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (webView != null) {
+                        String js = "if(window.onSpailaSharedText) window.onSpailaSharedText(" + JSONObject.quote(sharedText) + ");";
+                        webView.evaluateJavascript(js, null);
+                    }
+                }, 1000);
+            }
+        }
+    }
+
+    private void authenticateBiometric(int callId, String promptText) {
+        runOnUiThread(() -> {
+            try {
+                BiometricManager manager = BiometricManager.from(this);
+                int canAuth = manager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
+                if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+                    reply(callId, "false");
+                    return;
+                }
+
+                Executor executor = ContextCompat.getMainExecutor(this);
+                BiometricPrompt prompt = new BiometricPrompt(this, executor, new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
+                        reply(callId, "true");
+                    }
+                    @Override
+                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+                        reply(callId, "false");
+                    }
+                    @Override
+                    public void onAuthenticationFailed() {
+                        // Keep trying or cancel
+                    }
+                });
+
+                BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
+                        .setTitle(promptText)
+                        .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                        .build();
+
+                prompt.authenticate(info);
+            } catch (Exception e) {
+                replyError(callId, "Biometric error: " + e.getMessage());
+            }
+        });
+    }
+
+    private void startSpeechToText(int callId, String prompt) {
+        try {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, prompt);
+            pendingSpeechCallId = callId;
+            startActivityForResult(intent, 2002);
+        } catch (Exception e) {
+            replyError(callId, "Speech recognition not available: " + e.getMessage());
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 2002 && pendingSpeechCallId != -1) {
+            if (resultCode == RESULT_OK && data != null) {
+                ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (matches != null && !matches.isEmpty()) {
+                    reply(pendingSpeechCallId, JSONObject.quote(matches.get(0)));
+                } else {
+                    reply(pendingSpeechCallId, JSONObject.quote(""));
+                }
+            } else {
+                replyError(pendingSpeechCallId, "Cancelled or no speech detected");
+            }
+            pendingSpeechCallId = -1;
         }
     }
 
